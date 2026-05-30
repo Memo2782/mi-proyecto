@@ -65,6 +65,33 @@ mi-proyecto/
 
 ---
 
+## 📋 Trazabilidad de Log de Ejecución Real (Log4j2 YAML)
+
+A continuación se muestra la secuencia real capturada en consola que evidencia el ciclo de vida síncrono/asíncrono de un pedido impactado a través del pipeline de red:
+
+```text
+# 1. El motor inicia de forma programática mapeando los puertos personalizados
+INFO  com.ejemplo.smpp.SmppClientService - Cliente SMPP inicializado de forma programática.
+INFO  com.ejemplo.grpc.GrpcServerManager - Servidor gRPC iniciado de forma nativa en el puerto 50051
+INFO  org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+INFO  org.springframework.boot.web.embedded.netty.NettyWebServer - Netty started on port 9898 (http)
+INFO  com.ejemplo.Application - Started Application in 1.646 seconds
+
+# 2. Llegada de un pedido vía gRPC y delegación inmediata al despachador de Akka
+INFO  com.ejemplo.grpc.GrpcServerManager - Mensaje gRPC delegado al sistema de Actores para ID: ORD-2026-PERU
+INFO  com.ejemplo.akka.OrderActor - Actor Classic procesando payload para ID: ORD-2026-PERU
+
+# 3. Persistencia asíncrona reactiva confirmada en MongoDB y disparo de notificación por la pasarela SMPP
+INFO  com.ejemplo.akka.OrderActor - Guardado confirmado en MongoDB: ORD-2026-PERU
+WARN  com.ejemplo.smpp.SmppClientService - [Simulación SMS] Para: +51999888777 | Texto: Your order ORD-2026-PERU has been processed
+
+# 4. Consumo concurrente y no bloqueante de hilos NIO en la API Webflux leyendo de base de datos
+INFO  com.ejemplo.controller.OrderApiController - Consulta REST Webflux para el estado de la orden: ORD-2026-PERU
+INFO  com.ejemplo.controller.OrderApiController - Consulta REST Webflux para volumen de órdenes entre 2026-05-01T00:00Z y 2026-05-31T23:59:59Z
+```
+
+---
+
 ## ⚙️ Compilación y Ejecución en macOS
 
 ### 1. Iniciar Base de Datos Local
@@ -80,7 +107,7 @@ gradle generateProto
 ```
 
 ### 3. Iniciar el Servidor de Aplicación
-Arranca el microservicio (este comando bloqueará la terminal activa para mantener los listeners de red de Webflux y gRPC levantados):
+Arranca el microservicio:
 ```bash
 gradle bootRun
 ```
@@ -95,7 +122,6 @@ Abre una **nueva pestaña** de la terminal (`Cmd + T`) en tu Mac y ejecuta los s
 ```bash
 curl -s http://localhost:9898/actuator/prometheus | grep app_orders_processed_total
 ```
-*   **Resultado esperado:** `app_orders_processed_total_total 0.0` (El contador inicia limpio).
 
 ### Paso B: Disparar Pedido vía gRPC
 Envía un pedido complejo (`ORD-2026-PERU`) directamente al puerto `50051` ejecutando el cliente de simulación:
@@ -108,17 +134,13 @@ java -cp "build/classes/java/main:\$(find ~/.gradle/caches -name "*.jar" | tr '\
 ```bash
 curl -i http://localhost:9898/api/orders/ORD-2026-PERU/status
 ```
-*   **Resultado esperado:** Retorna un HTTP `200 OK` con el cuerpo de texto `PROCESSED` (Confirmando la persistencia asíncrona del Actor).
 
 ### Paso D: Consultar Conteo de Pedidos por Rango de Fechas
 ```bash
 curl -i -X GET "http://localhost:9898/api/orders/count-by-date?start=2026-05-01T00:00:00Z&end=2026-05-31T23:59:59Z"
 ```
-*   **Resultado esperado:** Retorna un JSON con el valor `1` procesado mediante consultas de tiempo no bloqueantes.
 
 ### Paso E: Verificar Incremento de Métrica Operacional
 ```bash
 curl -s http://localhost:9898/actuator/prometheus | grep app_orders_processed_total
 ```
-*   **Resultado esperado:** `app_orders_processed_total_total 1.0` (El contador refleja dinámicamente el ciclo de vida completado por el Actor de Akka).
-

@@ -1,0 +1,15 @@
+Cliente SMPP inicializado de forma programática.
+2026-05-29 17:53:53.853 [main] INFO  com.ejemplo.grpc.GrpcServerManager - Servidor gRPC iniciado de forma nativa en el puerto 50051
+2026-05-29 17:53:53.970 [main] INFO  org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2026-05-29 17:53:54.104 [main] INFO  org.springframework.boot.web.embedded.netty.NettyWebServer - Netty started on port 9898 (http)
+2026-05-29 17:53:54.113 [main] INFO  com.ejemplo.Application - Started Application in 1.646 seconds (process running for 2.063)
+2026-05-29 17:59:34.994 [grpc-default-executor-0] INFO  com.ejemplo.grpc.GrpcServerManager - Mensaje gRPC delegado al sistema de Actores para ID: ORD-2026-PERU
+2026-05-29 17:59:34.995 [OrderActorSystem-akka.actor.default-dispatcher-6] INFO  com.ejemplo.akka.OrderActor - Actor Classic procesando payload para ID: ORD-2026-PERU
+2026-05-29 17:59:35.112 [Thread-10] INFO  com.ejemplo.akka.OrderActor - Guardado confirmado en MongoDB: ORD-2026-PERU
+2026-05-29 17:59:35.112 [Thread-10] WARN  com.ejemplo.smpp.SmppClientService - [Simulación SMS] Para: +51999888777 | Texto: Your order ORD-2026-PERU has been processed
+2026-05-29 18:00:35.702 [reactor-http-nio-4] INFO  com.ejemplo.controller.OrderApiController - Consulta REST Webflux para el estado de la orden: ORD-2026-PERU
+2026-05-29 18:11:53.642 [reactor-http-nio-6] INFO  com.ejemplo.controller.OrderApiController - Consulta REST Webflux para volumen de órdenes entre 2026-05-01T00:00Z y 2026-05-31T23:59:59Z
+2026-05-29 18:12:38.041 [reactor-http-nio-7] INFO  com.ejemplo.controller.OrderApiController - Consulta REST Webflux para el estado de la orden: ORD-2026-PERU
+2026-05-29 18:13:03.402 [reactor-http-nio-1] INFO  com.ejemplo.controller.OrderApiController - Consulta REST Webflux para volumen de órdenes entre 2026-05-01T00:00Z y 2026-05-31T23:59:59Z
+│█████████████▏·│ 87% EXECUTING [1h 17m 36s]
+> :b
